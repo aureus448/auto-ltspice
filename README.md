@@ -8,9 +8,9 @@ While the code in its current state is very specific to my needs, this can be us
 What the code currently does:
 For help in designing future systems, here is an explanation of my code.
 1. Given a 'Spice Simulation' directory, iterates through its subdirectories as 'main directories'
-  a. Inside each main directory a 'sub-directory' contains all .cir files to run
+    > Inside each main directory a 'sub-directory' contains all .cir files to run
 2. Iterating through each sub-directory, pulls the .cir files and appends them to a temporary list of files to run
 3. Runs all LTspice instances simultaneously through python's subprocess Popen function for concurrent function access.
-  a. While dirty, my method just terminates all instances after a period of 10 seconds. For my models, the average runtime was 0.5s, meaning this was well after each program had successfully ran.
+    > While dirty, my method just terminates all instances after a period of 10 seconds. For my models, the average runtime was 0.5s, meaning this was well after each program had successfully ran.
 4. Through each .raw file generated within the sub-directory, use the ltspice library to collect the data (Knowing the expected variable names is not necessary other than knowing what data you need, the ltspice library can show all 'keys' if necessary and you are just experimenting)
 5. Output the data in a .csv format (.txt file in my instance) with the column headers being the data collected, and the rows being the data for each collected data point (Example: Vbias, I(Vbias))
