@@ -1,3 +1,7 @@
+"""
+With a given data_sets.ini configuration listing the name of a dataset by HighVoltage-LowVoltage,
+creates the expected dataset to be run upon by main.py
+"""
 import os
 import configparser
 
@@ -17,7 +21,11 @@ if __name__ == '__main__':
     data_sets = [[key, config[key]['temps']] for key in config.keys() if key != 'DEFAULT']
     print(data_sets)
 
+    # TODO unfinalized logic that seperates each project into 'Name' and Temps to run
+    to_run_sets = []
     for set, temps in data_sets:
+
+        # Step 1: Collect Temperatures to Run
         if not temps:
             temp_sets = [27, 30, 35, 40, 45, 50]
             print(set, temp_sets)
@@ -27,35 +35,39 @@ if __name__ == '__main__':
             for val in var_sets:
                 if '-' in val:
                     lower, upper = val.split('-')
-                    results = [x for x in range(int(lower), int(upper)+1)]
-                else: results = [int(val)]
+                    results = [x for x in range(int(lower), int(upper) + 1)]
+                else:
+                    results = [int(val)]
                 temp_sets += results
             print(set, temp_sets)
+        to_run_sets.append((set, temp_sets))
+
+    # Only check these folders for data
+    folders_to_check = ['1x10', '2x4', '2x5', '3x3', '4x2', '5x2', '10x1']
 
     for dir in os.scandir(path):
-        if dir.is_dir() and dir.name not in data_name:  # ensure directory not file
+        if dir.is_dir() and dir.name in folders_to_check:
             print(f'Main Directory: {dir.name}')
-            for sub_dir in os.scandir(dir.path):
-                if sub_dir.is_dir():  # ensure directory not file
-                    print(f'Sub Directory: {dir.name}/{sub_dir.name}')
-                    for Full_Voltage, Shade_Voltage, name in list(zip(full, shade, data_name)):
-                        # Creates the dataset path
-                        full_path = os.path.abspath(
-                            f"Simulation_Sets\\{name}\\{dir.name}\\{sub_dir.name}\\")
-                        os.makedirs(full_path, exist_ok=True)
 
-                        # Iterate through files and add them to dataset
-                        for file in os.scandir(sub_dir.path):
-                            if file.is_file() and file.name.endswith('cir'):
-                                print(f'Creating Datasets from {file.name}')
-                                with open(file.path, 'r') as f:
-                                    ltspice_file = f.readlines()
+            # Highly inefficient but lazy method
+            for file in os.scandir(dir.path):
+                if file.is_file() and file.name.endswith('cir'):
+                    print(f'Creating Dataset from {file.name}')
 
-                                    for line in range(len(ltspice_file)):
-                                        # Regex for search: (?<=[0-9]{4}  0 dc )\d+
-                                        ltspice_file[line] = ltspice_file[line].replace('900', Shade_Voltage)
-                                        ltspice_file[line] = ltspice_file[line].replace('1000', Full_Voltage)
+                    for set, temps in to_run_sets:
+                        for temperatures in temps:
+                            full_path = os.path.abspath(
+                                f"Simulation_Sets\\{set}\\Temp{temperatures}\\{dir.name}\\")
+                            os.makedirs(full_path, exist_ok=True)
 
-                                    with open(full_path + '\\' + file.name, 'w') as f:
-                                        f.write(''.join(ltspice_file))
-                                    pass
+                            high, low = set.split('-')  # Get high and low voltages expected
+                            with open(file.path, 'r') as f:
+                                ltspice_file = f.read()
+
+                                # Update the necessary data (Temperature, High voltage, Low Voltage)
+                                ltspice_file = ltspice_file.replace('temp=30', f'temp={temperatures}')
+                                ltspice_file = ltspice_file.replace('900', low)
+                                ltspice_file = ltspice_file.replace('1000', high)
+
+                                with open(full_path + '\\' + file.name, 'w') as f:
+                                    f.write(ltspice_file)  # write out the file to correct pathing
