@@ -3,15 +3,35 @@ import ltspice
 import pandas as pd
 from subprocess import Popen
 import time
-
+import configparser
+from queue import Queue
 
 def run_ltspice(commands):
-    procs = [Popen(i) for i in commands]
-    time.sleep(10)
-    for p in procs:
-        p.terminate()
-    # time.sleep(3) #wait for all processes to be guaranteed closed
+    procs = Queue()
+    s = subprocess.STARTUPINFO(dwFlags=subprocess.STARTF_USESHOWWINDOW, wShowWindow=subprocess.SW_HIDE)
+    sleep = 0.2
+    for i in range(len(commands)):
+        procs.put((Popen(commands[i], startupinfo=s), time.time()))
+        time.sleep(sleep)
+        # Begins checking after at least X seconds has passed
+        if not procs.empty() and sleep*i > 8:
+            process = procs.get()
+            if time.time() - process[1] > 8:
+                process[0].terminate()
+            else:
+                procs.put(process) # not ready-put back in queue (at end) and continue looping
+                continue
 
+    while not procs.empty():
+        process = procs.get()
+        if time.time() - process[1] > 8:
+            process[0].terminate()
+        else:
+            procs.put(process) # not ready-put back in queue (at end)
+
+#TODO
+# Regex replace 1000-> 800
+# 900 -> 700
 
 if __name__ == '__main__':
 
