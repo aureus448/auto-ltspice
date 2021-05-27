@@ -72,3 +72,10 @@ if __name__ == '__main__':
 
                                 with open(full_path + '\\' + file.name, 'w') as f:
                                     f.write(ltspice_file)  # write out the file to correct pathing
+                elif file.is_file() and file.name == 'cell_2.lib':
+                    for set, temps in to_run_sets:
+                        for temperatures in temps:
+                            full_path = os.path.abspath(
+                                f"Simulation_Sets\\{set}\\Temp{temperatures}\\{dir.name}\\")
+                            with open(file.path, 'r') as file_r, open(full_path + '\\' + file.name, 'w') as f:
+                                f.write(file_r.read())  # write out the file to correct pathing

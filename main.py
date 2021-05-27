@@ -40,17 +40,13 @@ if __name__ == '__main__':
     # Read in datasets to make
     config = configparser.ConfigParser()
     config.read('data_sets.ini')
-    full = config['Full Voltage']['voltages'].split(', ')
-    shade = config['Shade Voltage']['voltages'].split(', ')
-    data_name = config['Names']['name'].split(', ')
+    data_name = [key for key in config.keys() if key != 'DEFAULT']
 
     # Run this script right next to Spice Simulation folder
-    path = os.path.abspath('Spice Simulation/')
+    path = os.path.abspath('Simulation_Sets/')
     commands = []
 
-    print('WARNING: Computer WIll be useless for 20-30 minutes. Program begins in 5 seconds.')
-    time.sleep(5)
-
+    folders_to_check = ['1x10', '2x4', '2x5', '3x3', '4x2', '5x2', '10x1']
     for dataset in os.scandir(path):
         if dataset.is_dir() and dataset.name in data_name:  # ensure directory not file
             print(f'Running Data Analysis on {dataset.name}')
@@ -58,13 +54,18 @@ if __name__ == '__main__':
                 if dir.is_dir():  # ensure directory not file
                     print(f'Main Directory: {dataset.name}/{dir.name}')
                     for sub_dir in os.scandir(dir.path):
-                        if sub_dir.is_dir():  # ensure directory not file
+                        if sub_dir.is_dir() and sub_dir.name in folders_to_check:  # ensure directory not file
                             print(f'Sub Directory: {dataset.name}/{dir.name}/{sub_dir.name} [{dataset.name}]')
                             for file in os.scandir(sub_dir.path):
                                 if file.is_file() and file.name.endswith('cir'):
                                     print(f'Queueing LTspiceXVII on {file.name} [{dataset.name}]')
                                     commands.append(f"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe -Run \"{file.path}\"")
 
+    print(f'\n{len(commands)} LTSpiceXVII runs have been queued - Expect a runtime of '
+          f'{len(commands)*0.2+8:.2f} seconds ({(len(commands)*0.2+8)//60:.0f} minutes, '
+          f'{(len(commands)*0.2+8)%60:.2f} seconds)')
+    print('Beginning run in 10 seconds...')
+    time.sleep(10)
     run_ltspice(commands)
 
     for dataset in os.scandir(path):
