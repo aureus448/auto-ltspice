@@ -1,0 +1,51 @@
+****************************************
+*													*
+*			SERIES.CIR							*
+*********5 Series X 2 Parallel*************
+.include cell_2.lib
+.option temp=30
+**********First Column************
+xcell_01_02 02 01 0201 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_02_03 03 02 0302 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_03_04 04 03 0403 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_04_05 05 04 0504 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_05_00 gnd 05 0605 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+
+**********Secondd Column************
+xcell_01_12 12 01 1201 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_12_13 13 12 1312 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_13_14 14 13 1413 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_14_15 15 14 1514 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+xcell_15_00 0  15 0015 cell_2 params:area=49  j0=16E-20 j02=1.2E-12
++ jsc=30.5E-3 rs=28e-3 rsh=100000
+
+
+
+vbias 01 0 dc 0
+virrad_01_02  0201  02 dc 900
+virrad_02_03  0302  03 dc 900
+virrad_03_04  0403  04 dc 900
+virrad_04_05  0504  05 dc 900
+virrad_05_06  0605  06 dc 900
+
+virrad_11_12  1201  12 dc 900
+virrad_12_13  1312  13 dc 900
+virrad_13_14  1413  14 dc 1000
+virrad_14_15  1514  15 dc 1000
+virrad_15_00  0015  0  dc 1000
+
+
+.plot dc i(vbias)
+
+.dc vbias 0 5.25 0.01
+.probe
+.end
