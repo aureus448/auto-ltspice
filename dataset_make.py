@@ -1,6 +1,9 @@
 """
 With a given data_sets.ini configuration listing the name of a dataset by HighVoltage-LowVoltage,
 creates the expected dataset to be run upon by main.py
+
+Data is collected from a local "Spice Simulation" directory relative to the python script and
+produced in a Simulation_Sets folder to be run upon.
 """
 import os
 import configparser
@@ -12,16 +15,14 @@ if __name__ == '__main__':
 
     # Run this script right next to Spice Simulation folder
     path = os.path.abspath('Spice Simulation/')
-    commands = []
 
     # Read in datasets to make
     config = configparser.ConfigParser()
     config.read('data_sets.ini')
 
     data_sets = [[key, config[key]['temps']] for key in config.keys() if key != 'DEFAULT']
-    print(data_sets)
+    # print(data_sets)
 
-    # TODO unfinalized logic that seperates each project into 'Name' and Temps to run
     to_run_sets = []
     for set, temps in data_sets:
 
