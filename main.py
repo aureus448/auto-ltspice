@@ -7,7 +7,7 @@ from subprocess import Popen
 import time
 import configparser
 from queue import Queue
-
+import re
 def run_ltspice(commands):
     procs = Queue()
     s = subprocess.STARTUPINFO(dwFlags=subprocess.STARTF_USESHOWWINDOW, wShowWindow=subprocess.SW_HIDE)
@@ -61,13 +61,19 @@ if __name__ == '__main__':
                                     print(f'Queueing LTspiceXVII on {file.name} [{dataset.name}]')
                                     commands.append(f"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe -Run \"{file.path}\"")
 
+                        break
+
+                break
+        break
     print(f'\n{len(commands)} LTSpiceXVII runs have been queued - Expect a runtime of '
           f'{len(commands)*0.2+8:.2f} seconds ({(len(commands)*0.2+8)//60:.0f} minutes, '
           f'{(len(commands)*0.2+8)%60:.2f} seconds)')
     print('Beginning run in 10 seconds...')
-    time.sleep(10)
-    run_ltspice(commands)
+    # time.sleep(10)
+    # run_ltspice(commands)
 
+    i = 1 # tracker of how many file(s) are run
+    gigantor = pd.DataFrame()
     for dataset in os.scandir(path):
         if dataset.is_dir() and dataset.name in data_name:  # ensure directory not file
             print(f'Running Data Analysis on {dataset.name}')
@@ -99,3 +105,32 @@ if __name__ == '__main__':
                                     os.makedirs(dir_path, exist_ok=True)
                                     full_path = os.path.abspath(f"{dir_path}\\{filename}\\")
                                     out.to_csv(full_path, sep='\t', float_format='%.5f', index=False)
+
+                                    # Now that .txt has been generated - lets create biggo csv
+                                    biggo = out.copy()
+
+                                    to_rename = {
+                                        'vbias':'Voltage (V)',
+                                        'I(Vbias)':'Current (A)',
+                                        'I(Vbias)*vbias':'Power (W)',
+                                    }
+                                    biggo.rename(columns=to_rename, inplace=True)
+                                    rx = re.compile(r'-?\d+(?:\.\d+)?')
+                                    rtemp = re.compile(r'\d+')
+                                    contentList = list(map(int, rx.findall(filename)))
+                                    temp = list(map(int, rx.findall(dir.name)))[0]
+                                    biggo['Full Voltage']=dataset.name.split('-')[0]
+                                    biggo['Shade Voltage']=dataset.name.split('-')[1]
+                                    biggo['Temperature'] = temp
+                                    biggo['File Name'] = filename
+                                    biggo['# Of Cells']=contentList[0]*contentList[1]
+                                    biggo['Series Cells']=contentList[0]
+                                    biggo['Parallel Cells']=contentList[1]
+                                    biggo['Shaded Cells']=contentList[2] if len(contentList)>2 else 0
+                                    biggo['Shading %']=f'{((contentList[2]/(contentList[0]*contentList[1]))*100 if len(contentList)>2 else 0):.2f}'
+                                    biggo['Solar Panel']=i
+                                    biggo['IsShade']='1' if len(contentList)>2 and contentList[2] > 0 else 0
+                                    gigantor = gigantor.append(biggo, ignore_index=True)
+                                    i+= 1 # increment number of solar panels run on
+
+    gigantor.to_csv('MEGASET.csv', index=False)
